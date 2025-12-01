@@ -146,6 +146,14 @@ export const SlidePreview: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <Button
+            variant="secondary"
+            size="sm"
+            icon={<ArrowLeft size={18} />}
+            onClick={() => navigate(`/project/${projectId}/detail`)}
+          >
+            上一步
+          </Button>
+          <Button
             variant="ghost"
             size="sm"
             icon={<RefreshCw size={18} />}

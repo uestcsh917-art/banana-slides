@@ -251,7 +251,7 @@ class AIService:
         
         prompt = dedent(f"""\
         利用专业平面设计知识，根据参考图片的色彩与风格生成一页设计风格相同的ppt页面，作为整个ppt的其中一页，内容是:
-        {page_desc}
+        {page_desc}（文字内容一致即可，表点符号、文字布局可以美化）
         
         整个ppt的大纲为：
         {outline_text}

@@ -63,8 +63,8 @@ class Config:
     OPENAI_MAX_RETRIES = int(os.getenv('OPENAI_MAX_RETRIES', '2'))  # 减少重试次数，避免过多重试导致累积超时
 
     # Lazyllm 格式配置（当 AI_PROVIDER_FORMAT=lazyllm 时使用）
-    LAZYLLM_TEXT_SOURCE = os.getenv('LAZYLLM_TEXT_SOURCE', 'deepseek')   # 文本生成厂商
-    LAZYLLM_IMAGE_SOURCE = os.getenv('LAZYLLM_IMAGE_SOURCE', 'doubao')   # 图片生成厂商
+    LAZYLLM_TEXT_SOURCE = os.getenv('LAZYLLM_TEXT_SOURCE', 'deepseek')   # 文本生成模型厂商
+    LAZYLLM_IMAGE_SOURCE = os.getenv('LAZYLLM_IMAGE_SOURCE', 'doubao')   # 图片生成模型厂商
     
     # 各厂商 API Key
     LAZYLLM_DOUBAO_API_KEY = os.getenv('LAZYLLM_DOUBAO_API_KEY', '')

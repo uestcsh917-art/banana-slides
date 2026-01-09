@@ -41,7 +41,15 @@ class LazyllmImageProvider(ImageProvider):
         )
 
     def generate_image(self, prompt: str = None, ref_images: Optional[List[Image.Image]] = None, 
-                       aspect_ratio = "16:9", resolution = "4K") -> Optional[Image.Image]:
+                       aspect_ratio = "16:9", resolution = "1920*1080") -> Optional[Image.Image]:
+        # 分辨率字符串转换：针对qwen系列
+        resolution_map = {
+            "1K": "1920*1080",
+            "2K": "2048*1080",
+            "4K": "3840*2160"
+        }
+        if resolution in resolution_map:
+            resolution = resolution_map[resolution]
         # 将 PIL Image 对象转换为文件路径:lazyllm传入参考图片需要以字符串格式的路径传入。
         file_paths = None
         if ref_images:
@@ -63,7 +71,6 @@ class LazyllmImageProvider(ImageProvider):
             else:
                 LOG.warning('No valid image path in response')
                 return None
-
         LOG.info(f'Found image: {image_path}')
         try:
             image = Image.open(image_path)

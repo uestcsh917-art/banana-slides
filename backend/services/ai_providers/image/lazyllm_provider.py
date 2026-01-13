@@ -17,9 +17,6 @@ from typing import Optional, List
 from PIL import Image
 from .base import ImageProvider
 from config import get_config
-# from lazyllm.components.formatter import decode_query_with_filepaths
-# from lazyllm import LOG
-
 
 class LazyLLMImageProvider(ImageProvider):
     """Image generation using Lazyllm framework"""
@@ -68,7 +65,7 @@ class LazyLLMImageProvider(ImageProvider):
                 temp_path = os.path.join(tempfile.gettempdir(), f'lazyllm_ref_{i}.png')
                 img.save(temp_path)
                 file_paths.append(temp_path)
-        response_path = self.client(input=prompt, files=file_paths, size=resolution)
+        response_path = self.client(prompt, lazyllm_files=file_paths, size=resolution)
         image_path = decode_query_with_filepaths(response_path) # dict
         if not image_path:
             LOG.warning('No images found in response')

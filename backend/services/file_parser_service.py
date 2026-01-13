@@ -54,9 +54,10 @@ class FileParserService:
                  google_api_key: str = "", google_api_base: str = "",
                  openai_api_key: str = "", openai_api_base: str = "",
                  image_caption_model: str = "gemini-3-flash-preview",
+                 lazyllm_image_caption_source: str = "", lazyllm_api_keys: str = "",
                  provider_format: str = None,
                  mineru_model_version: str = "vlm",
-                 lazyllm_image_caption_source=None, lazyllm_api_keys=None,):
+                 ):
         """
         Initialize the file parser service
         

@@ -182,8 +182,8 @@ def _get_provider_config() -> Dict[str, Any]:
         }
     
     elif provider_format == 'lazyllm':
-        text_source = _get_config_value('LAZYLLM_TEXT_SOURCE', 'siliconflow')
-        image_source = _get_config_value('LAZYLLM_IMAGE_SOURCE', 'siliconflow')
+        text_source = _get_config_value('LAZYLLM_TEXT_SOURCE', 'deepseek')
+        image_source = _get_config_value('LAZYLLM_IMAGE_SOURCE', 'doubao')
         
         logger.info(f"Provider config - format: lazyllm, text_source: {text_source}, image_source: {image_source}")
         

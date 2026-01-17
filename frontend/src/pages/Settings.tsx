@@ -482,7 +482,7 @@ export const Settings: React.FC = () => {
             <span className="ml-2">服务测试</span>
           </h2>
           <p className="text-sm text-gray-500">
-            提前验证关键服务配置是否可用，避免功能异常。
+            提前验证关键服务配置是否可用，避免使用期间异常。
           </p>
           <div className="space-y-4">
             {[

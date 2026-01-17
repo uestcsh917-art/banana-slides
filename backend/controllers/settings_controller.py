@@ -438,7 +438,7 @@ def run_settings_test(test_name: str):
                 prompt=prompt,
                 ref_image_path=str(test_image_path),
                 aspect_ratio="16:9",
-                resolution=current_app.config.get("DEFAULT_RESOLUTION", "2K")
+                resolution=current_app.config.get("DEFAULT_RESOLUTION", "1K")
             )
 
             if result is None:

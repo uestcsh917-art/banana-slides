@@ -32,7 +32,6 @@ class LazyLLMTextProvider(TextProvider):
             type = 'llm',
             )
         
-        
     def generate_text(self, prompt, thinking_budget = 1000):
         """
         Generate text using Lazyllm framework

@@ -377,7 +377,7 @@ OPENAI_API_BASE=https://api.openai.com/v1
 # VERTEX_LOCATION=global
 # GOOGLE_APPLICATION_CREDENTIALS=./gcp-service-account.json
 
-PORT=5000
+BACKEND_PORT=5000
 ...
 ```
 
@@ -548,7 +548,8 @@ banana-slides/
 
 欢迎提出新功能建议或反馈，本人也会~~佛系~~回答大家问题
 
-<img width="301" alt="image" src="https://github.com/user-attachments/assets/6a557e4b-8be5-4946-a6fc-307e0fb0d69c" />
+<img width="301"  alt="image" src="https://github.com/user-attachments/assets/8812130e-1f79-40e6-893d-694b4f6ff406" />
+
 
 
 

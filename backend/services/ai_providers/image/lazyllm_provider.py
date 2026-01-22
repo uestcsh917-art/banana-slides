@@ -5,10 +5,12 @@ Support models:
 - qwen-image-edit
 - qwen-image-edit-plus
 - qwen-image-edit-plus-2025-10-30
+- ...
 
 - doubao-seedream-4-0-250828
 - doubao-seededit-3-0-i2i-250628
 - doubao-seedream-4.5
+- ...
 """
 import tempfile
 import os
@@ -22,26 +24,28 @@ from lazyllm import LOG
 
 class LazyLLMImageProvider(ImageProvider):
     """Image generation using Lazyllm framework"""
-    def __init__(self, source: str = 'doubao', model: str = 'doubao-seedream-4-0-250828',
-                 api_key: str = None):
+    def __init__(self, source: str = 'doubao', model: str = 'doubao-seedream-4-0-250828'):
         """
         Initialize GenAI image provider
 
         Args:
             source: image_editing model provider, support qwen,doubao,siliconflow now.
             model: Model name to use
-            api_key: qwen/doubao/siliconflow API key
             type: Category of the online service. Defaults to ``llm``.
         """
-        self.client = lazyllm.OnlineModule(
+        self.client = lazyllm.namespace('BANANA').OnlineModule(
             source=source,
             model=model,
-            api_key=api_key,
             type='image_editing',
         )
 
-    def generate_image(self, prompt: str = None, ref_images: Optional[List[Image.Image]] = None, 
-                       aspect_ratio = "16:9", resolution = "1920*1080") -> Optional[Image.Image]:
+    def generate_image(self, prompt: str = None, 
+                       ref_images: Optional[List[Image.Image]] = None, 
+                       aspect_ratio = "16:9", 
+                       resolution = "1920*1080",
+                       enable_thinking: bool = False,
+                       thinking_budget: int = 0
+                       ) -> Optional[Image.Image]:
         resolution_map = {
             "1K": "1920*1080",
             "2K": "2048*1080",

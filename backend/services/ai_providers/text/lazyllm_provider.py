@@ -11,24 +11,21 @@ Supports modes:
 """
 import lazyllm
 from .base import TextProvider
-from config import get_config
 
 class LazyLLMTextProvider(TextProvider):
     """Text generation using lazyllm"""
-    def __init__(self, source: str = 'deepseek', model: str = "deepseek-v3-1-terminus", api_key: str = None):
+    def __init__(self, source: str = 'deepseek', model: str = "deepseek-v3-1-terminus"):
         """
         Initialize lazyllm text provider
 
         Args:
             source: text model provider, support qwen,doubao,deepseek,siliconflow,glm...
             model: Model name to use
-            api_key: qwen/doubao/siliconflow/... API key
             type: Category of the online service. Defaults to ``llm``.
         """
-        self.client = lazyllm.OnlineModule(
+        self.client = lazyllm.namespace('BANANA').OnlineModule(
             source = source, 
             model = model, 
-            api_key = api_key,
             type = 'llm',
             )
         

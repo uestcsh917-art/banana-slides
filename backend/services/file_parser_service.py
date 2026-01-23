@@ -69,6 +69,7 @@ class FileParserService:
             openai_api_key: OpenAI API key for image captioning (used when AI_PROVIDER_FORMAT=openai)
             openai_api_base: OpenAI API base URL
             image_caption_model: Model to use for image captioning
+            lazyllm_image_caption_source: image caption model provider for lazyllm
             provider_format: AI provider format ('gemini' or 'openai'). If not provided, reads from environment variable.
             mineru_model_version: MinerU model version ('vlm' or 'pipeline'). Default is 'vlm'.
         """

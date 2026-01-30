@@ -633,7 +633,7 @@ const debouncedUpdatePage = debounce(
     }
 
     set({ error: null });
-    
+
     // 标记为生成中
     set({
       pageDescriptionGeneratingTasks: {
@@ -643,14 +643,26 @@ const debouncedUpdatePage = debounce(
     });
 
     try {
-      // 立即同步一次项目数据，以更新页面状态
-      await get().syncProject();
-      
       // 传递 force_regenerate=true 以允许重新生成已有描述
-      await api.generatePageDescription(currentProject.id, pageId, true);
-      
-      // 刷新项目数据
-      await get().syncProject();
+      const response = await api.generatePageDescription(currentProject.id, pageId, true);
+
+      // 使用 API 返回的页面数据直接更新 store（避免额外的同步请求）
+      if (response.data) {
+        const updatedPageData = response.data;
+        const { currentProject: latestProject } = get();
+        if (latestProject) {
+          const updatedPages = latestProject.pages.map((page) =>
+            page.id === pageId ? { ...page, ...updatedPageData } : page
+          );
+          set({
+            currentProject: {
+              ...latestProject,
+              pages: updatedPages,
+            },
+          });
+          console.log(`[生成描述] 页面 ${pageId} 描述已更新，数据来自 API 响应`);
+        }
+      }
     } catch (error: any) {
       set({ error: normalizeErrorMessage(error.message || '生成描述失败') });
       throw error;
@@ -747,8 +759,41 @@ const debouncedUpdatePage = debounce(
             }
           });
           set({ pageGeneratingTasks: newTasks });
-          // 刷新项目数据
-          await get().syncProject();
+
+          // 刷新项目数据，并验证图片路径已更新
+          // 使用重试机制确保数据同步完成
+          let retryCount = 0;
+          const maxRetries = 5;
+          const retryDelay = 1000; // 1秒
+
+          const syncWithRetry = async (): Promise<void> => {
+            await get().syncProject();
+
+            // 验证所有页面的图片路径是否已更新
+            const { currentProject: updatedProject } = get();
+            if (updatedProject) {
+              const allImagesReady = pageIds.every(pageId => {
+                const page = updatedProject.pages.find(p => p.id === pageId);
+                return page?.generated_image_path;
+              });
+
+              if (allImagesReady) {
+                console.log(`[批量轮询] 所有图片路径已同步`);
+                return;
+              }
+
+              if (retryCount < maxRetries) {
+                retryCount++;
+                console.log(`[批量轮询] 图片路径尚未完全同步，${retryDelay}ms 后重试 (${retryCount}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                return syncWithRetry();
+              } else {
+                console.warn(`[批量轮询] 达到最大重试次数，部分图片路径可能未同步`);
+              }
+            }
+          };
+
+          await syncWithRetry();
         } else if (task.status === 'FAILED') {
           console.error(`[批量轮询] Task ${taskId} 失败:`, task.error_message || task.error);
           // 清除所有相关页面的任务记录

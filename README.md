@@ -221,13 +221,13 @@ IMAGE_MODEL_SOURCE=doubao         # 图片编辑模型厂商
 IMAGE_CAPTION_MODEL_SOURCE=qwen   # 图片描述模型厂商
 
 # 各厂商 API Key（只需配置你要使用的厂商）
-BANANA_DOUBAO_API_KEY=your-doubao-api-key            # 火山引擎/豆包
-BANANA_DEEPSEEK_API_KEY=your-deepseek-api-key        # DeepSeek
-BANANA_QWEN_API_KEY=your-qwen-api-key                # 阿里云/通义千问
-BANANA_GLM_API_KEY=your-glm-api-key                  # 智谱 GLM
-BANANA_SILICONFLOW_API_KEY=your-siliconflow-api-key  # 硅基流动
-BANANA_SENSENOVA_API_KEY=your-sensenova-api-key      # 商汤日日新
-BANANA_MINIMAX_API_KEY=your-minimax-api-key          # MiniMax
+BANANA_SLIDES_DOUBAO_API_KEY=your-doubao-api-key            # 火山引擎/豆包
+BANANA_SLIDES_DEEPSEEK_API_KEY=your-deepseek-api-key        # DeepSeek
+BANANA_SLIDES_QWEN_API_KEY=your-qwen-api-key                # 阿里云/通义千问
+BANANA_SLIDES_GLM_API_KEY=your-glm-api-key                  # 智谱 GLM
+BANANA_SLIDES_SILICONFLOW_API_KEY=your-siliconflow-api-key  # 硅基流动
+BANANA_SLIDES_SENSENOVA_API_KEY=your-sensenova-api-key      # 商汤日日新
+BANANA_SLIDES_MINIMAX_API_KEY=your-minimax-api-key          # MiniMax
 ...
 ```
 
@@ -261,24 +261,13 @@ BANANA_MINIMAX_API_KEY=your-minimax-api-key          # MiniMax
 
 2. **启动服务**
 
-**⚡ 使用预构建镜像**
-
-项目在 Docker Hub 提供了构建好的前端和后端镜像（同步主分支最新版本），可以跳过本地构建步骤，实现快速部署：
-
-```bash
-# 使用预构建镜像启动（无需从头构建）
-docker compose -f docker-compose.prod.yml up -d
-```
-
-镜像名称：
-- `anoinex/banana-slides-frontend:latest`
-- `anoinex/banana-slides-backend:latest`
-
-**从头构建镜像**
-
 ```bash
 docker compose up -d
 ```
+更新：项目也在dockerhub提供了构建好的前端和后端镜像（同步主分支最新版本），名字分别为：
+1. anoinex/banana-slides-frontend
+2. anoinex/banana-slides-backend
+
 
 > [!TIP]
 > 如遇网络问题，可在 `.env` 文件中取消镜像源配置的注释, 再重新运行启动命令：
@@ -554,6 +543,15 @@ banana-slides/
 └── README.md                   # 本文件
 ```
 
+## 交流群
+为了方便大家沟通互助，建此微信交流群.
+
+欢迎提出新功能建议或反馈，本人也会~~佛系~~回答大家问题
+
+<img width="301"  alt="image" src="https://github.com/user-attachments/assets/8812130e-1f79-40e6-893d-694b4f6ff406" />
+
+
+
 
 
 
@@ -649,7 +647,7 @@ banana-slides/
 <img width="240" alt="image" src="https://github.com/user-attachments/assets/fd7a286d-711b-445e-aecf-43e3fe356473" />
 
 感谢以下朋友对项目的无偿赞助支持：
-> @雅俗共赏、@曹峥、@以年观日、@John、@胡yun星Ethan, @azazo1、@刘聪NLP、@🍟、@苍何、@biubiu  
+> @雅俗共赏、@曹峥、@以年观日、@John、@azazo1、@刘聪NLP、@🍟、@苍何、@biubiu  
 > 如对赞助列表有疑问（如赞赏后没看到您的名字），可<a href="mailto:anionex@qq.com">联系作者</a>
  
 ## 📈 项目统计

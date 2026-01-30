@@ -17,7 +17,6 @@ import os
 from typing import Optional, List
 from PIL import Image
 from .base import ImageProvider
-from config import get_config
 import lazyllm
 from lazyllm.components.formatter import decode_query_with_filepaths
 from lazyllm import LOG

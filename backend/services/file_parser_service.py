@@ -9,6 +9,7 @@ import zipfile
 import io
 import base64
 import requests
+import tempfile
 from typing import Optional, List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from PIL import Image
@@ -706,8 +707,6 @@ class FileParserService:
             elif self._provider_format == 'lazyllm':
                 # Use LazyLLM format
                 client = self._get_lazyllm_client()
-                import tempfile
-                import os
                 file_path = []
                 temp_path = os.path.join(tempfile.gettempdir(), f'lazyllm_ref.png')
                 image.save(temp_path)

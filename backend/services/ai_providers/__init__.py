@@ -208,7 +208,7 @@ def get_text_provider(model: str = "gemini-3-flash-preview") -> TextProvider:
             location=config['location']
         )
     elif provider_format == 'lazyllm':
-        source = config.get('text_source', 'siliconflow')
+        source = config.get('text_source', 'deepseek')
         logger.info(f"Using Lazyllm for text generation, model: {model}, source: {source}")
         return LazyLLMTextProvider(
             source=source,

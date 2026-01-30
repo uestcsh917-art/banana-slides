@@ -23,9 +23,8 @@ e.g.:
 
 """
 import os
-import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 from dotenv import load_dotenv
 from PIL import Image
 from lazyllm.components.formatter import decode_query_with_filepaths
@@ -69,8 +68,8 @@ def gen_text(prompt: str,
 def gen_json_text(prompt: str,
                   source: str = DEFAULT_TEXT_SOURCE,
                   model: str = DEFAULT_TEXT_MODEL,
-                  api_key: str = None) -> str:
-    text = gen_text(prompt, source=source, model=model, api_key=api_key)
+                  ) -> str:
+    text = gen_text(prompt, source=source, model=model)
     # Clean up JSON formatting (remove markdown code blocks if present)
     cleaned_text = text.strip().strip("```json").strip("```").strip()
     return cleaned_text
@@ -135,7 +134,7 @@ def describe_image(image_path: str,
                    prompt: Optional[str] = None,
                    source: str = DEFAULT_VLM_SOURCE,
                    model: str = DEFAULT_VLM_MODEL,
-                   api_key: str = None) -> str:
+                    ) -> str:
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image not found: {image_path}")
     if not prompt:
@@ -182,7 +181,7 @@ if __name__ == "__main__":
     try:
         image = gen_image(
             "在参考图片中插入 'lazyllm' 这串英文",
-            ref_image_path='D:\\1.png', # depending on your local image path
+            ref_image_path='path/to/your/image.png', # depending on your local image path
             source="qwen",
             resolution="2K"
         )
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     print("\n[Test 4] Image Description (Qwen VLM)")
     try:
         # Create a test image if it doesn't exist
-        test_image_path = 'D:\\1.png' # depending on your local image pat
+        test_image_path = 'path/to/your/image.png' # depending on your local image path
         if not os.path.exists(test_image_path):
             print(f"Please provide a test image at {test_image_path}")
         else:

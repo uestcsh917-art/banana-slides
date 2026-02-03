@@ -213,6 +213,21 @@ OPENAI_API_BASE=https://api.openai.com/v1
 # VERTEX_PROJECT_ID=your-gcp-project-id
 # VERTEX_LOCATION=global
 # GOOGLE_APPLICATION_CREDENTIALS=./gcp-service-account.json
+
+# Lazyllm 格式配置（当 AI_PROVIDER_FORMAT=lazyllm 时使用）
+# 选择文本生成和图片生成使用的厂商
+TEXT_MODEL_SOURCE=deepseek        # 文本生成模型厂商
+IMAGE_MODEL_SOURCE=doubao         # 图片编辑模型厂商
+IMAGE_CAPTION_MODEL_SOURCE=qwen   # 图片描述模型厂商
+
+# 各厂商 API Key（只需配置你要使用的厂商）
+BANANA_SLIDES_DOUBAO_API_KEY=your-doubao-api-key            # 火山引擎/豆包
+BANANA_SLIDES_DEEPSEEK_API_KEY=your-deepseek-api-key        # DeepSeek
+BANANA_SLIDES_QWEN_API_KEY=your-qwen-api-key                # 阿里云/通义千问
+BANANA_SLIDES_GLM_API_KEY=your-glm-api-key                  # 智谱 GLM
+BANANA_SLIDES_SILICONFLOW_API_KEY=your-siliconflow-api-key  # 硅基流动
+BANANA_SLIDES_SENSENOVA_API_KEY=your-sensenova-api-key      # 商汤日日新
+BANANA_SLIDES_MINIMAX_API_KEY=your-minimax-api-key          # MiniMax
 ...
 ```
 
@@ -362,6 +377,7 @@ OPENAI_API_BASE=https://api.openai.com/v1
 # VERTEX_LOCATION=global
 # GOOGLE_APPLICATION_CREDENTIALS=./gcp-service-account.json
 
+# 可修改此变量来控制后端服务端口
 BACKEND_PORT=5000
 ...
 ```
@@ -528,6 +544,15 @@ banana-slides/
 └── README.md                   # 本文件
 ```
 
+## 交流群
+为了方便大家沟通互助，建此微信交流群.
+
+欢迎提出新功能建议或反馈，本人也会~~佛系~~回答大家问题
+
+<img width="301"  alt="image" src="https://github.com/user-attachments/assets/8812130e-1f79-40e6-893d-694b4f6ff406" />
+
+
+
 
 
 
@@ -623,7 +648,7 @@ banana-slides/
 <img width="240" alt="image" src="https://github.com/user-attachments/assets/fd7a286d-711b-445e-aecf-43e3fe356473" />
 
 感谢以下朋友对项目的无偿赞助支持：
-> @雅俗共赏、@曹峥、@以年观日、@John、@胡yun星Ethan, @azazo1、@刘聪NLP、@🍟、@苍何、@biubiu  
+> @雅俗共赏、@曹峥、@以年观日、@John、@azazo1、@刘聪NLP、@🍟、@苍何、@biubiu  
 > 如对赞助列表有疑问（如赞赏后没看到您的名字），可<a href="mailto:anionex@qq.com">联系作者</a>
  
 ## 📈 项目统计

@@ -14,6 +14,8 @@ interface ProjectState {
   pageGeneratingTasks: Record<string, string>;
   // 每个页面的描述生成状态 (pageId -> boolean)
   pageDescriptionGeneratingTasks: Record<string, boolean>;
+  // 警告消息
+  warningMessage: string | null;
 
   // Actions
   setCurrentProject: (project: Project | null) => void;
@@ -64,17 +66,22 @@ const debouncedUpdatePage = debounce(
   async (projectId: string, pageId: string, data: any) => {
       try {
     const promises: Promise<any>[] = [];
-    
+
     // 如果更新的是 description_content，使用专门的端点
     if (data.description_content) {
       promises.push(api.updatePageDescription(projectId, pageId, data.description_content));
     }
-    
+
     // 如果更新的是 outline_content，使用专门的端点
     if (data.outline_content) {
       promises.push(api.updatePageOutline(projectId, pageId, data.outline_content));
     }
-    
+
+    // 如果更新的是 part 字段，使用通用端点
+    if ('part' in data) {
+      promises.push(api.updatePage(projectId, pageId, { part: data.part }));
+    }
+
     // 如果没有特定的内容更新，使用通用端点
     if (promises.length === 0) {
       await api.updatePage(projectId, pageId, data);
@@ -105,6 +112,7 @@ const debouncedUpdatePage = debounce(
   error: null,
   pageGeneratingTasks: {},
   pageDescriptionGeneratingTasks: {},
+  warningMessage: null,
 
   // Setters
   setCurrentProject: (project) => set({ currentProject: project }),
@@ -318,7 +326,7 @@ const debouncedUpdatePage = debounce(
         outline_content: { title: '新页面', points: [] },
         order_index: currentProject.pages.length,
       };
-      
+
       const response = await api.addPage(currentProject.id, newPage);
       if (response.data) {
         await get().syncProject();
@@ -633,7 +641,7 @@ const debouncedUpdatePage = debounce(
     }
 
     set({ error: null });
-    
+
     // 标记为生成中
     set({
       pageDescriptionGeneratingTasks: {
@@ -643,14 +651,26 @@ const debouncedUpdatePage = debounce(
     });
 
     try {
-      // 立即同步一次项目数据，以更新页面状态
-      await get().syncProject();
-      
       // 传递 force_regenerate=true 以允许重新生成已有描述
-      await api.generatePageDescription(currentProject.id, pageId, true);
-      
-      // 刷新项目数据
-      await get().syncProject();
+      const response = await api.generatePageDescription(currentProject.id, pageId, true);
+
+      // 使用 API 返回的页面数据直接更新 store（避免额外的同步请求）
+      if (response.data) {
+        const updatedPageData = response.data;
+        const { currentProject: latestProject } = get();
+        if (latestProject) {
+          const updatedPages = latestProject.pages.map((page) =>
+            page.id === pageId ? { ...page, ...updatedPageData } : page
+          );
+          set({
+            currentProject: {
+              ...latestProject,
+              pages: updatedPages,
+            },
+          });
+          console.log(`[生成描述] 页面 ${pageId} 描述已更新，数据来自 API 响应`);
+        }
+      }
     } catch (error: any) {
       set({ error: normalizeErrorMessage(error.message || '生成描述失败') });
       throw error;
@@ -683,7 +703,7 @@ const debouncedUpdatePage = debounce(
       }
     }
 
-    set({ error: null });
+    set({ error: null, warningMessage: null });
     
     try {
       // 调用批量生成 API
@@ -746,9 +766,46 @@ const debouncedUpdatePage = debounce(
               delete newTasks[id];
             }
           });
-          set({ pageGeneratingTasks: newTasks });
-          // 刷新项目数据
-          await get().syncProject();
+          
+          // 提取警告消息（如果有）
+          const warningMessage = task.progress?.warning_message || null;
+          
+          set({ pageGeneratingTasks: newTasks, warningMessage });
+
+          // 刷新项目数据，并验证图片路径已更新
+          // 使用重试机制确保数据同步完成
+          let retryCount = 0;
+          const maxRetries = 5;
+          const retryDelay = 1000; // 1秒
+
+          const syncWithRetry = async (): Promise<void> => {
+            await get().syncProject();
+
+            // 验证所有页面的图片路径是否已更新
+            const { currentProject: updatedProject } = get();
+            if (updatedProject) {
+              const allImagesReady = pageIds.every(pageId => {
+                const page = updatedProject.pages.find(p => p.id === pageId);
+                return page?.generated_image_path;
+              });
+
+              if (allImagesReady) {
+                console.log(`[批量轮询] 所有图片路径已同步`);
+                return;
+              }
+
+              if (retryCount < maxRetries) {
+                retryCount++;
+                console.log(`[批量轮询] 图片路径尚未完全同步，${retryDelay}ms 后重试 (${retryCount}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                return syncWithRetry();
+              } else {
+                console.warn(`[批量轮询] 达到最大重试次数，部分图片路径可能未同步`);
+              }
+            }
+          };
+
+          await syncWithRetry();
         } else if (task.status === 'FAILED') {
           console.error(`[批量轮询] Task ${taskId} 失败:`, task.error_message || task.error);
           // 清除所有相关页面的任务记录
@@ -766,6 +823,11 @@ const debouncedUpdatePage = debounce(
           // 刷新项目数据以更新页面状态
           await get().syncProject();
         } else if (task.status === 'PENDING' || task.status === 'PROCESSING') {
+          // 检查警告消息
+          const newWarning = task.progress?.warning_message;
+          if (newWarning && get().warningMessage !== newWarning) {
+            set({ warningMessage: newWarning });
+          }
           // 继续轮询，同时同步项目数据以更新页面状态
           console.log(`[批量轮询] Task ${taskId} 处理中，同步项目数据...`);
           await get().syncProject();

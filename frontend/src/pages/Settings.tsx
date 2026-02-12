@@ -22,7 +22,7 @@ const settingsI18n = {
       fields: {
         aiProviderFormat: "AI 提供商格式",
         aiProviderFormatDesc: "选择 API 请求格式，影响后端如何构造和发送请求。保存设置后生效。",
-        openaiFormat: "OpenAI 格式", geminiFormat: "Gemini 格式",
+        openaiFormat: "OpenAI 格式", geminiFormat: "Gemini 格式", lazyllmFormat: "LazyLLM 格式",
         apiBaseUrl: "API Base URL", apiBaseUrlPlaceholder: "https://api.example.com",
         apiBaseUrlDesc: "设置大模型提供商 API 的基础 URL",
         apiKey: "API Key", apiKeyPlaceholder: "输入新的 API Key",
@@ -95,7 +95,7 @@ const settingsI18n = {
       fields: {
         aiProviderFormat: "AI Provider Format",
         aiProviderFormatDesc: "Select API request format, affects how backend constructs and sends requests. Takes effect after saving.",
-        openaiFormat: "OpenAI Format", geminiFormat: "Gemini Format",
+        openaiFormat: "OpenAI Format", geminiFormat: "Gemini Format", lazyllmFormat: "LazyLLM Format",
         apiBaseUrl: "API Base URL", apiBaseUrlPlaceholder: "https://api.example.com",
         apiBaseUrlDesc: "Set the base URL for the LLM provider API",
         apiKey: "API Key", apiKeyPlaceholder: "Enter new API Key",
@@ -190,7 +190,7 @@ interface ServiceTestState {
 
 // 初始表单数据
 const initialFormData = {
-  ai_provider_format: 'gemini' as 'openai' | 'gemini',
+  ai_provider_format: 'gemini' as 'openai' | 'gemini' | 'lazyllm',
   api_base_url: '',
   api_key: '',
   text_model: '',
@@ -229,6 +229,7 @@ export const Settings: React.FC = () => {
           options: [
             { value: 'openai', label: t('settings.fields.openaiFormat') },
             { value: 'gemini', label: t('settings.fields.geminiFormat') },
+            { value: 'lazyllm', label: t('settings.fields.lazyllmFormat') },
           ],
         },
         {

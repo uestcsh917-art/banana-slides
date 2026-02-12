@@ -9,8 +9,8 @@ Supports modes:
 - sensenova
 - ...
 """
-import lazyllm
 from .base import TextProvider
+from ..lazyllm_env import ensure_lazyllm_namespace_key
 
 class LazyLLMTextProvider(TextProvider):
     """Text generation using lazyllm"""
@@ -23,6 +23,15 @@ class LazyLLMTextProvider(TextProvider):
             model: Model name to use
             type: Category of the online service. Defaults to ``llm``.
         """
+        try:
+            import lazyllm
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "lazyllm is required when AI_PROVIDER_FORMAT=lazyllm. "
+                "Please install backend dependencies including lazyllm."
+            ) from exc
+
+        ensure_lazyllm_namespace_key(source, namespace='BANANA')
         self.client = lazyllm.namespace('BANANA').OnlineModule(
             source = source, 
             model = model, 

@@ -14,12 +14,13 @@ Support models:
 """
 import tempfile
 import os
+import logging
 from typing import Optional, List
 from PIL import Image
 from .base import ImageProvider
-import lazyllm
-from lazyllm.components.formatter import decode_query_with_filepaths
-from lazyllm import LOG
+from ..lazyllm_env import ensure_lazyllm_namespace_key
+
+logger = logging.getLogger(__name__)
 
 class LazyLLMImageProvider(ImageProvider):
     """Image generation using Lazyllm framework"""
@@ -32,6 +33,15 @@ class LazyLLMImageProvider(ImageProvider):
             model: Model name to use
             type: Category of the online service. Defaults to ``llm``.
         """
+        try:
+            import lazyllm
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "lazyllm is required when AI_PROVIDER_FORMAT=lazyllm. "
+                "Please install backend dependencies including lazyllm."
+            ) from exc
+
+        ensure_lazyllm_namespace_key(source, namespace='BANANA')
         self.client = lazyllm.namespace('BANANA').OnlineModule(
             source=source,
             model=model,
@@ -54,29 +64,49 @@ class LazyLLMImageProvider(ImageProvider):
             resolution = resolution_map[resolution]
         # Convert a PIL Image object to a file path: When passing a reference image to lazyllm, you need to input a path in string format.
         file_paths = None
+        temp_paths = []
+        decode_query_with_filepaths = None
+        try:
+            from lazyllm.components.formatter import decode_query_with_filepaths as _decoder
+            decode_query_with_filepaths = _decoder
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "lazyllm is required when AI_PROVIDER_FORMAT=lazyllm. "
+                "Please install backend dependencies including lazyllm."
+            ) from exc
         if ref_images:
             file_paths = []
-            for i, img in enumerate(ref_images):
-                temp_path = os.path.join(tempfile.gettempdir(), f'lazyllm_ref_{i}.png')
+            for img in ref_images:
+                with tempfile.NamedTemporaryFile(prefix='lazyllm_ref_', suffix='.png', delete=False) as tmp:
+                    temp_path = tmp.name
                 img.save(temp_path)
                 file_paths.append(temp_path)
-        response_path = self.client(prompt, lazyllm_files=file_paths, size=resolution)
-        image_path = decode_query_with_filepaths(response_path) # dict
-        if not image_path:
-            LOG.warning('No images found in response')
-            raise ValueError()
-        if isinstance(image_path, dict):
-            files = image_path.get('files')
-            if files and isinstance(files, list) and len(files) > 0:
-                image_path = files[0]
-            else:
-                LOG.warning('No valid image path in response')
-                return None
+                temp_paths.append(temp_path)
         try:
-            image = Image.open(image_path)
-            LOG.info(f'✓ Successfully loaded image from: {image_path}')
-            return image
-        except Exception as e:
-            LOG.error(f'✗ Failed to load image: {e}')   
-        LOG.warning('No valid images could be loaded')
-        return None
+            response_path = self.client(prompt, lazyllm_files=file_paths, size=resolution)
+            image_path = decode_query_with_filepaths(response_path) # dict
+            if not image_path:
+                logger.warning('No images found in response')
+                raise ValueError()
+            if isinstance(image_path, dict):
+                files = image_path.get('files')
+                if files and isinstance(files, list) and len(files) > 0:
+                    image_path = files[0]
+                else:
+                    logger.warning('No valid image path in response')
+                    return None
+            try:
+                with Image.open(image_path) as image:
+                    result = image.copy()
+                logger.info(f'Successfully loaded image from: {image_path}')
+                return result
+            except Exception as e:
+                logger.error(f'Failed to load image: {e}')
+            logger.warning('No valid images could be loaded')
+            return None
+        finally:
+            for temp_path in temp_paths:
+                try:
+                    os.remove(temp_path)
+                except OSError:
+                    pass

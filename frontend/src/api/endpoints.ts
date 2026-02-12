@@ -881,10 +881,11 @@ export interface TestSettingsOverride {
   text_model?: string;
   image_model?: string;
   image_caption_model?: string;
+  image_caption_model_source?: string;
   mineru_api_base?: string;
   mineru_token?: string;
   baidu_ocr_api_key?: string;
-  ai_provider_format?: 'openai' | 'gemini';
+  ai_provider_format?: 'openai' | 'gemini' | 'lazyllm';
   image_resolution?: string;
   enable_text_reasoning?: boolean;
   text_thinking_budget?: number;

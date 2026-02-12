@@ -18,6 +18,7 @@ from services.ai_providers.image.baidu_inpainting_provider import create_baidu_i
 from services.task_manager import task_manager
 
 logger = logging.getLogger(__name__)
+ALLOWED_PROVIDER_FORMATS = {"openai", "gemini", "lazyllm"}
 
 settings_bp = Blueprint(
     "settings", __name__, url_prefix="/api/settings"
@@ -71,6 +72,10 @@ def temporary_settings_override(settings_override: dict):
         if settings_override.get("image_caption_model"):
             original_values["IMAGE_CAPTION_MODEL"] = current_app.config.get("IMAGE_CAPTION_MODEL")
             current_app.config["IMAGE_CAPTION_MODEL"] = settings_override["image_caption_model"]
+
+        if settings_override.get("image_caption_model_source"):
+            original_values["IMAGE_CAPTION_MODEL_SOURCE"] = current_app.config.get("IMAGE_CAPTION_MODEL_SOURCE")
+            current_app.config["IMAGE_CAPTION_MODEL_SOURCE"] = settings_override["image_caption_model_source"]
 
         if settings_override.get("mineru_api_base"):
             original_values["MINERU_API_BASE"] = current_app.config.get("MINERU_API_BASE")
@@ -155,8 +160,9 @@ def update_settings():
         # Update AI provider format configuration
         if "ai_provider_format" in data:
             provider_format = data["ai_provider_format"]
-            if provider_format not in ["openai", "gemini"]:
-                return bad_request("AI provider format must be 'openai' or 'gemini'")
+            if provider_format not in ALLOWED_PROVIDER_FORMATS:
+                allowed_values = "', '".join(sorted(ALLOWED_PROVIDER_FORMATS))
+                return bad_request(f"AI provider format must be one of '{allowed_values}'")
             settings.ai_provider_format = provider_format
 
         # Update API configuration
@@ -279,12 +285,16 @@ def reset_settings():
         # Priority logic:
         # - Check AI_PROVIDER_FORMAT
         # - If "openai" -> use OPENAI_API_BASE / OPENAI_API_KEY
+        # - If "lazyllm" -> keep API base/key empty (uses source-specific env keys)
         # - Otherwise (default "gemini") -> use GOOGLE_API_BASE / GOOGLE_API_KEY
         settings.ai_provider_format = Config.AI_PROVIDER_FORMAT
 
         if (Config.AI_PROVIDER_FORMAT or "").lower() == "openai":
             default_api_base = Config.OPENAI_API_BASE or None
             default_api_key = Config.OPENAI_API_KEY or None
+        elif (Config.AI_PROVIDER_FORMAT or "").lower() == "lazyllm":
+            default_api_base = None
+            default_api_key = None
         else:
             default_api_base = Config.GOOGLE_API_BASE or None
             default_api_key = Config.GOOGLE_API_KEY or None
@@ -332,8 +342,8 @@ def reset_settings():
 @settings_bp.route("/verify", methods=["POST"], strict_slashes=False)
 def verify_api_key():
     """
-    POST /api/settings/verify - 验证API key是否可用
-    通过调用一个轻量的gemini-3-flash-preview测试请求（思考budget=0）来判断
+    POST /api/settings/verify - 验证模型配置是否可用
+    通过调用一个轻量测试请求（thinking_budget=0）来判断
 
     Returns:
         {
@@ -360,19 +370,25 @@ def verify_api_key():
             settings_override["api_base_url"] = settings.api_base_url
         if settings.ai_provider_format:
             settings_override["ai_provider_format"] = settings.ai_provider_format
+        if settings.text_model:
+            settings_override["text_model"] = settings.text_model
 
         # 使用上下文管理器临时应用用户配置进行验证
         with temporary_settings_override(settings_override):
             from services.ai_providers import get_text_provider
 
-            # 使用 gemini-3-flash-preview 模型进行验证（思考budget=0，最小开销）
-            verification_model = "gemini-3-flash-preview"
+            verification_model = (
+                settings.text_model
+                or current_app.config.get("TEXT_MODEL")
+                or Config.TEXT_MODEL
+                or "gemini-3-flash-preview"
+            )
 
             # 尝试创建provider并调用一个简单的测试请求
             try:
                 provider = get_text_provider(model=verification_model)
                 # 调用一个简单的测试请求（思考budget=0，最小开销）
-                response = provider.generate_text("Hello", thinking_budget=0)
+                provider.generate_text("Hello", thinking_budget=0)
 
                 logger.info("API key verification successful")
                 return success_response({
@@ -383,9 +399,18 @@ def verify_api_key():
             except ValueError as ve:
                 # API key未配置
                 logger.warning(f"API key not configured: {str(ve)}")
+                provider_format = (settings.ai_provider_format or "").lower()
+                if provider_format == "lazyllm":
+                    source = current_app.config.get("TEXT_MODEL_SOURCE", Config.TEXT_MODEL_SOURCE).upper()
+                    message = (
+                        f"LazyLLM API key 未配置，请设置 BANANA_{source}_API_KEY "
+                        f"（或兼容变量 BANANA_SLIDES_{source}_API_KEY）"
+                    )
+                else:
+                    message = "API key 未配置，请在设置中配置 API key 和 API Base URL"
                 return success_response({
                     "available": False,
-                    "message": "API key 未配置，请在设置中配置 API key 和 API Base URL"
+                    "message": message
                 })
             except Exception as e:
                 # API调用失败（可能是key无效、余额不足等）
@@ -560,6 +585,10 @@ def _create_file_parser():
         openai_api_key=current_app.config.get("OPENAI_API_KEY", ""),
         openai_api_base=current_app.config.get("OPENAI_API_BASE", ""),
         image_caption_model=current_app.config.get("IMAGE_CAPTION_MODEL", Config.IMAGE_CAPTION_MODEL),
+        lazyllm_image_caption_source=current_app.config.get(
+            "IMAGE_CAPTION_MODEL_SOURCE",
+            Config.IMAGE_CAPTION_MODEL_SOURCE,
+        ),
         provider_format=current_app.config.get("AI_PROVIDER_FORMAT", "gemini"),
     )
 
@@ -819,6 +848,8 @@ def run_settings_test(test_name: str):
             test_settings["image_model"] = global_settings.image_model
         if global_settings.image_caption_model:
             test_settings["image_caption_model"] = global_settings.image_caption_model
+        if current_app.config.get("IMAGE_CAPTION_MODEL_SOURCE"):
+            test_settings["image_caption_model_source"] = current_app.config.get("IMAGE_CAPTION_MODEL_SOURCE")
         if global_settings.mineru_api_base:
             test_settings["mineru_api_base"] = global_settings.mineru_api_base
         if global_settings.mineru_token:

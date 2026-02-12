@@ -14,6 +14,7 @@ from typing import Optional, List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from PIL import Image
 from markitdown import MarkItDown
+from services.ai_providers.lazyllm_env import ensure_lazyllm_namespace_key, get_lazyllm_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,7 @@ class FileParserService:
             import lazyllm
             source = self._lazyllm_image_caption_source or "qwen"
             model = self._image_caption_model or "qwen-vl-plus"
+            ensure_lazyllm_namespace_key(source, namespace='BANANA')
 
             self._lazyllm_client = lazyllm.namespace('BANANA').OnlineModule(
                 source=source,
@@ -134,8 +136,8 @@ class FileParserService:
         if self._provider_format == 'openai':
             return bool(self._openai_api_key)
         elif self._provider_format == 'lazyllm':
-            source = (self._lazyllm_image_caption_source or "qwen").upper()
-            return bool(os.getenv(f"BANANA_{source}_API_KEY"))
+            source = self._lazyllm_image_caption_source or "qwen"
+            return bool(get_lazyllm_api_key(source, namespace='BANANA'))
         else:
             return bool(self._google_api_key)
     
@@ -205,7 +207,7 @@ class FileParserService:
                     logger.info("Markdown enhanced with image captions (all images succeeded).")
                 return batch_id, enhanced_content, extract_id, None, failed_count
             else:
-                logger.info("Skipping image caption enhancement (no Gemini client).")
+                logger.info("Skipping image caption enhancement (caption model unavailable).")
                 return batch_id, markdown_content, extract_id, None, 0
             
         except Exception as e:
@@ -692,7 +694,7 @@ class FileParserService:
                 base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
                 
                 response = client.chat.completions.create(
-                    model=self.image_caption_model,
+                    model=self._image_caption_model,
                     messages=[
                         {
                             "role": "user",
@@ -708,11 +710,16 @@ class FileParserService:
             elif self._provider_format == 'lazyllm':
                 # Use LazyLLM format
                 client = self._get_lazyllm_client()
-                file_path = []
-                temp_path = os.path.join(tempfile.gettempdir(), f'lazyllm_ref.png')
-                image.save(temp_path)
-                file_path.append(temp_path)
-                caption = client(prompt, lazyllm_files=file_path)
+                with tempfile.NamedTemporaryFile(prefix='lazyllm_ref_', suffix='.png', delete=False) as tmp:
+                    temp_path = tmp.name
+                try:
+                    image.save(temp_path)
+                    caption = client(prompt, lazyllm_files=[temp_path])
+                finally:
+                    try:
+                        os.remove(temp_path)
+                    except OSError:
+                        pass
             else:
                 # Use Gemini SDK format (default)
                 from google.genai import types
@@ -722,7 +729,7 @@ class FileParserService:
                     return ""
                 
                 result = client.models.generate_content(
-                    model=self.image_caption_model,
+                    model=self._image_caption_model,
                     contents=[image, prompt],
                     config=types.GenerateContentConfig(
                         temperature=0.3,  # Lower temperature for more consistent captions
@@ -735,4 +742,3 @@ class FileParserService:
         except Exception as e:
             logger.warning(f"Failed to generate caption for {image_url}: {str(e)}")
             return ""  # Return empty string on failure
-

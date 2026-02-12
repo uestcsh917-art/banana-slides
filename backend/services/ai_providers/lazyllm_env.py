@@ -10,8 +10,9 @@ def get_lazyllm_api_key(source: str, namespace: str = "BANANA") -> str:
 
     Lookup order:
     1. {namespace}_{SOURCE}_API_KEY
-    2. BANANA_SLIDES_{SOURCE}_API_KEY (legacy docs)
-    3. LAZYLLM_{SOURCE}_API_KEY (LazyLLM default)
+    2. {SOURCE}_API_KEY (vendor-prefixed)
+    3. BANANA_SLIDES_{SOURCE}_API_KEY (legacy docs)
+    4. LAZYLLM_{SOURCE}_API_KEY (LazyLLM default)
     """
     source_upper = (source or "").upper()
     if not source_upper:
@@ -19,6 +20,7 @@ def get_lazyllm_api_key(source: str, namespace: str = "BANANA") -> str:
 
     candidates = [
         f"{namespace}_{source_upper}_API_KEY",
+        f"{source_upper}_API_KEY",
         f"BANANA_SLIDES_{source_upper}_API_KEY",
         f"LAZYLLM_{source_upper}_API_KEY",
     ]

@@ -57,3 +57,17 @@ def test_can_generate_captions_accepts_legacy_lazyllm_key_prefix():
             lazyllm_image_caption_source=source,
         )
         assert service._can_generate_captions() is True
+
+
+def test_can_generate_captions_accepts_vendor_prefix_key():
+    """LazyLLM caption check should accept {SOURCE}_API_KEY vendor prefix."""
+    source = 'qwen'
+    key_name = f'{source.upper()}_API_KEY'
+
+    with patch.dict(os.environ, {key_name: 'test-key'}, clear=False):
+        service = FileParserService(
+            mineru_token='test-token',
+            provider_format='lazyllm',
+            lazyllm_image_caption_source=source,
+        )
+        assert service._can_generate_captions() is True

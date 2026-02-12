@@ -132,6 +132,16 @@
 
 
 ## 🔥 近期更新
+- 【2-9】：
+  * 新功能
+    * 支持在首页、大纲、描述卡片里面粘贴图片并立即识别，并提供更好的交互体验
+    * 大纲章节手动编辑：支持手动调整页面所属章节（part）。
+    * Docker 多架构：镜像支持 amd64 / arm64 构建。
+    * 国际化 + 暗黑模式：新增中英文切换；支持亮色/暗色/跟随系统主题；全组件适配暗黑模式。
+  * 修复与体验优化
+    * 修复导出相关 500、参考文件关联时序、outline/page 数据错位、任务轮询错误项目、描述生成无限轮询、图片预览内存泄漏、批量删除部分失败处理。
+    * 优化格式示例提示、HTTP 错误提示文案、Modal 关闭体验、清理旧项目 localStorage、移除首次创建项目冗余提示。
+    * 若干其他优化和修复
 - 【1-4】 : v0.3.0发布：可编辑pptx导出全面升级：
   * 支持最大程度还原图片中文字的字号、颜色、加粗等样式；
   * 支持了识别表格中的文字内容；
@@ -141,7 +151,6 @@
   * **详细效果和使用方法见 https://github.com/Anionex/banana-slides/issues/121**
 
 - 【12-27】: 加入了对无图片模板模式的支持和较高质量的文字预设，现在可以通过纯文字描述的方式来控制ppt页面风格
-- 【12-24】: main分支加入了基于nano-banana-pro背景提取的可编辑pptx导出方法（目前Beta）
 
 
 ## 🗺️ 开发计划
@@ -159,11 +168,11 @@
 | 🔄 进行中 | 支持多层次、精确抠图的可编辑pptx导出 |
 | 🔄 进行中 | 网络搜索 |
 | 🔄 进行中 | Agent 模式 |
-| 🧭 规划中 | 优化前端加载速度 |
+| 🚍 部分 | 优化前端加载速度 |
 | 🧭 规划中 | 在线播放功能 |
 | 🧭 规划中 | 简单的动画和页面切换效果 |
-| 🧭 规划中 | 多语种支持 |
-| 🧭 规划中 | 用户系统 |
+| 🚍 部分支持 | 多语种支持 |
+| 🏢商业版功能 | 用户系统 |
 
 ## 📦 使用方法
 
@@ -193,7 +202,8 @@ cp .env.example .env
 ```
 
 编辑 `.env` 文件，配置必要的环境变量：
-> **项目中大模型接口以AIHubMix平台格式为标准，推荐使用 [AIHubMix](https://aihubmix.com/?aff=17EC) 获取API密钥，减小迁移成本**  
+> **项目中大模型接口以AIHubMix平台格式为标准，推荐使用 [AIHubMix](https://aihubmix.com/?aff=17EC) 获取API密钥，减小迁移成本**<br>
+> **友情提示：谷歌nano banana pro模型接口费用较高，请注意调用成本**
 ```env
 # AI Provider格式配置 (gemini / openai / vertex)
 AI_PROVIDER_FORMAT=gemini
@@ -231,7 +241,7 @@ BANANA_SLIDES_MINIMAX_API_KEY=your-minimax-api-key          # MiniMax
 ...
 ```
 
-**使用新版可编辑导出配置方法，获得更好的可编辑导出效果**: 需在[百度智能云平台](https://console.bce.baidu.com/iam/#/iam/apikey/list)中获取API KEY，填写在.env文件中的BAIDU_OCR_API_KEY字段（有充足的免费使用额度）。详见https://github.com/Anionex/banana-slides/issues/121 中的说明
+**使用新版可编辑导出配置方法，获得更好的可编辑导出效果**: 需在[百度智能云平台](https://console.bce.baidu.com/iam/#/iam/apikey/list)（点击此处进入）中获取API KEY，填写在.env文件中的BAIDU_OCR_API_KEY字段（有充足的免费使用额度）。详见https://github.com/Anionex/banana-slides/issues/121 中的说明
 
 
 <details>
@@ -549,7 +559,7 @@ banana-slides/
 
 欢迎提出新功能建议或反馈，本人也会~~佛系~~回答大家问题
 
-<img width="301"  alt="image" src="https://github.com/user-attachments/assets/8812130e-1f79-40e6-893d-694b4f6ff406" />
+<img width="301" alt="image" src="https://github.com/user-attachments/assets/c6ab4c96-8e89-4ab3-b347-04d50df4989b" />
 
 
 
@@ -609,7 +619,7 @@ banana-slides/
 
 
 <h2>🚀 Sponsor / 赞助 </h2>
-
+<br>
 <div align="center">
 <a href="https://aihubmix.com/?aff=17EC">
   <img src="./assets/logo_aihubmix.png" alt="AIHubMix" style="height:48px;">
@@ -620,15 +630,25 @@ banana-slides/
 
 <div align="center">
 
+ <br>
 
- <img width="120" alt="image" src="https://github.com/user-attachments/assets/ac2ad6ec-c1cf-4aaa-859c-756b54168c96" />
+<a href="https://api.chatfire.site/login?inviteCode=A15CD6A0"><img width="200" alt="image" src="https://github.com/user-attachments/assets/d6bd255f-ba2c-4ea3-bd90-fef292fc3397" />
+</a>
+
 
 <details>
   <summary>感谢<a href="https://api.chatfire.site/login?inviteCode=A15CD6A0">AI火宝</a>对本项目的赞助</summary>
   “聚合全球多模型API服务商。更低价格享受安全、稳定且72小时链接全球最新模型的服务。”
 </details>
 
-  
+
+<a href="https://www.rainyun.com/anionex_">
+ <img width="150" alt="image" src="https://github.com/user-attachments/assets/9c1ab6d5-2b67-42ad-b4c4-d1c172a0068a" />
+
+</a>
+
+感谢雨云为本项目赞助云服务器，支持项目开发部署~
+ 
 </div>
 
 

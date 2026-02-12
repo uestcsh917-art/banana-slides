@@ -339,6 +339,7 @@ dependencies = [
     { name = "flask-sqlalchemy" },
     { name = "google-genai" },
     { name = "img2pdf" },
+    { name = "lazyllm" },
     { name = "markitdown", extra = ["all"] },
     { name = "openai" },
     { name = "pillow" },
@@ -357,6 +358,10 @@ lazyllm = [
     { name = "lazyllm" },
     { name = "zhipuai" },
 ]
+sdk = [
+    { name = "dashscope" },
+    { name = "volcengine-python-sdk" },
+]
 test = [
     { name = "black" },
     { name = "flake8" },
@@ -372,6 +377,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13.0" },
     { name = "black", marker = "extra == 'test'", specifier = ">=23.0.0" },
     { name = "dashscope", marker = "extra == 'lazyllm'" },
+    { name = "dashscope", marker = "extra == 'sdk'" },
     { name = "flake8", marker = "extra == 'test'", specifier = ">=6.1.0" },
     { name = "flask", specifier = ">=3.0.0" },
     { name = "flask-cors", specifier = ">=4.0.0" },
@@ -380,6 +386,7 @@ requires-dist = [
     { name = "google-genai", specifier = ">=1.52.0" },
     { name = "httpx", marker = "extra == 'test'", specifier = ">=0.25.0" },
     { name = "img2pdf", specifier = ">=0.5.1" },
+    { name = "lazyllm", specifier = ">=0.7.3" },
     { name = "lazyllm", marker = "extra == 'lazyllm'" },
     { name = "markitdown", extras = ["all"] },
     { name = "openai", specifier = ">=1.0.0" },
@@ -393,11 +400,12 @@ requires-dist = [
     { name = "python-pptx", specifier = ">=1.0.0" },
     { name = "reportlab", specifier = ">=4.1.0" },
     { name = "tenacity", specifier = ">=9.0.0" },
+    { name = "volcengine-python-sdk", marker = "extra == 'sdk'" },
     { name = "volcengine-python-sdk", extras = ["ark"], specifier = ">=5.0.9" },
     { name = "werkzeug", specifier = ">=3.0.1" },
     { name = "zhipuai", marker = "extra == 'lazyllm'" },
 ]
-provides-extras = ["lazyllm", "test"]
+provides-extras = ["lazyllm", "test", "sdk"]
 
 [[package]]
 name = "beautifulsoup4"

@@ -1,6 +1,8 @@
 """Settings Controller - handles application settings endpoints"""
 
+import json
 import logging
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -76,6 +78,14 @@ def temporary_settings_override(settings_override: dict):
         if settings_override.get("image_caption_model_source"):
             original_values["IMAGE_CAPTION_MODEL_SOURCE"] = current_app.config.get("IMAGE_CAPTION_MODEL_SOURCE")
             current_app.config["IMAGE_CAPTION_MODEL_SOURCE"] = settings_override["image_caption_model_source"]
+
+        if settings_override.get("text_model_source"):
+            original_values["TEXT_MODEL_SOURCE"] = current_app.config.get("TEXT_MODEL_SOURCE")
+            current_app.config["TEXT_MODEL_SOURCE"] = settings_override["text_model_source"]
+
+        if settings_override.get("image_model_source"):
+            original_values["IMAGE_MODEL_SOURCE"] = current_app.config.get("IMAGE_MODEL_SOURCE")
+            current_app.config["IMAGE_MODEL_SOURCE"] = settings_override["image_model_source"]
 
         if settings_override.get("mineru_api_base"):
             original_values["MINERU_API_BASE"] = current_app.config.get("MINERU_API_BASE")
@@ -252,6 +262,28 @@ def update_settings():
         if "baidu_ocr_api_key" in data:
             settings.baidu_ocr_api_key = data["baidu_ocr_api_key"] or None
 
+        # Update LazyLLM source configuration
+        if "text_model_source" in data:
+            settings.text_model_source = (data["text_model_source"] or "").strip() or None
+
+        if "image_model_source" in data:
+            settings.image_model_source = (data["image_model_source"] or "").strip() or None
+
+        if "image_caption_model_source" in data:
+            settings.image_caption_model_source = (data["image_caption_model_source"] or "").strip() or None
+
+        if "lazyllm_api_keys" in data:
+            keys_data = data["lazyllm_api_keys"]
+            if isinstance(keys_data, dict):
+                # Merge with existing keys (only update non-empty values)
+                existing = settings.get_lazyllm_api_keys_dict()
+                for vendor, key in keys_data.items():
+                    if key:  # Only update if a new value is provided
+                        existing[vendor] = key
+                settings.lazyllm_api_keys = json.dumps(existing) if existing else None
+            elif keys_data is None:
+                settings.lazyllm_api_keys = None
+
         settings.updated_at = datetime.now(timezone.utc)
         db.session.commit()
 
@@ -313,6 +345,10 @@ def reset_settings():
         settings.enable_image_reasoning = False
         settings.image_thinking_budget = 1024
         settings.baidu_ocr_api_key = Config.BAIDU_OCR_API_KEY or None
+        settings.text_model_source = getattr(Config, 'TEXT_MODEL_SOURCE', None)
+        settings.image_model_source = getattr(Config, 'IMAGE_MODEL_SOURCE', None)
+        settings.image_caption_model_source = getattr(Config, 'IMAGE_CAPTION_MODEL_SOURCE', None)
+        settings.lazyllm_api_keys = None
         settings.image_resolution = Config.DEFAULT_RESOLUTION
         settings.image_aspect_ratio = Config.DEFAULT_ASPECT_RATIO
         settings.max_description_workers = Config.MAX_DESCRIPTION_WORKERS
@@ -546,6 +582,39 @@ def _sync_settings_to_config(settings: Settings):
     if settings.baidu_ocr_api_key:
         current_app.config["BAIDU_OCR_API_KEY"] = settings.baidu_ocr_api_key
         logger.info("Updated BAIDU_OCR_API_KEY from settings")
+
+    # Sync LazyLLM source settings
+    if settings.text_model_source:
+        old_source = current_app.config.get("TEXT_MODEL_SOURCE")
+        if old_source != settings.text_model_source:
+            ai_config_changed = True
+        current_app.config["TEXT_MODEL_SOURCE"] = settings.text_model_source
+
+    if settings.image_model_source:
+        old_source = current_app.config.get("IMAGE_MODEL_SOURCE")
+        if old_source != settings.image_model_source:
+            ai_config_changed = True
+        current_app.config["IMAGE_MODEL_SOURCE"] = settings.image_model_source
+
+    if settings.image_caption_model_source:
+        old_source = current_app.config.get("IMAGE_CAPTION_MODEL_SOURCE")
+        if old_source != settings.image_caption_model_source:
+            ai_config_changed = True
+        current_app.config["IMAGE_CAPTION_MODEL_SOURCE"] = settings.image_caption_model_source
+
+    # Sync LazyLLM vendor API keys to environment variables
+    # (lazyllm_env.py reads from os.environ via {SOURCE}_API_KEY)
+    if settings.lazyllm_api_keys:
+        try:
+            keys = json.loads(settings.lazyllm_api_keys)
+            for vendor, key in keys.items():
+                if key:
+                    env_key = f"{vendor.upper()}_API_KEY"
+                    if os.environ.get(env_key) != key:
+                        ai_config_changed = True
+                    os.environ[env_key] = key
+        except (json.JSONDecodeError, TypeError):
+            pass
     
     # Clear AI service cache if AI-related configuration changed
     if ai_config_changed:

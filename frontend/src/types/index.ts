@@ -140,6 +140,11 @@ export interface Settings {
   enable_image_reasoning: boolean;
   image_thinking_budget: number;
   baidu_ocr_api_key_length: number;
+  // LazyLLM 配置
+  text_model_source?: string;
+  image_model_source?: string;
+  image_caption_model_source?: string;
+  lazyllm_api_keys_info?: Record<string, number>;  // {vendor: key_length}
   created_at?: string;
   updated_at?: string;
 }

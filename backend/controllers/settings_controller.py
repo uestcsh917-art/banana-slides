@@ -402,10 +402,7 @@ def verify_api_key():
                 provider_format = (settings.ai_provider_format or "").lower()
                 if provider_format == "lazyllm":
                     source = current_app.config.get("TEXT_MODEL_SOURCE", Config.TEXT_MODEL_SOURCE).upper()
-                    message = (
-                        f"LazyLLM API key 未配置，请设置 BANANA_{source}_API_KEY "
-                        f"（或兼容变量 BANANA_SLIDES_{source}_API_KEY）"
-                    )
+                    message = f"LazyLLM API key 未配置，请设置 {source}_API_KEY"
                 else:
                     message = "API key 未配置，请在设置中配置 API key 和 API Base URL"
                 return success_response({

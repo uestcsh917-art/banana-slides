@@ -261,13 +261,13 @@ IMAGE_MODEL_SOURCE=doubao         # image-editing model provider
 IMAGE_CAPTION_MODEL_SOURCE=qwen   # image decription model provider
 
 # API Keys for different provider
-BANANA_DOUBAO_API_KEY=your-doubao-api-key            # doubao
-BANANA_DEEPSEEK_API_KEY=your-deepseek-api-key        # DeepSeek
-BANANA_QWEN_API_KEY=your-qwen-api-key                # qwen
-BANANA_GLM_API_KEY=your-glm-api-key                  # GLM
-BANANA_SILICONFLOW_API_KEY=your-siliconflow-api-key  # siliconflow
-BANANA_SENSENOVA_API_KEY=your-sensenova-api-key      # sensenova
-BANANA_MINIMAX_API_KEY=your-minimax-api-key          # MiniMax
+DOUBAO_API_KEY=your-doubao-api-key            # doubao
+DEEPSEEK_API_KEY=your-deepseek-api-key        # DeepSeek
+QWEN_API_KEY=your-qwen-api-key                # qwen
+GLM_API_KEY=your-glm-api-key                  # GLM
+SILICONFLOW_API_KEY=your-siliconflow-api-key  # siliconflow
+SENSENOVA_API_KEY=your-sensenova-api-key      # sensenova
+MINIMAX_API_KEY=your-minimax-api-key          # MiniMax
 ...
 ```
 

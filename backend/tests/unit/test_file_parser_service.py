@@ -45,18 +45,24 @@ def test_generate_single_caption_openai_uses_configured_model():
             os.remove(image_path)
 
 
-def test_can_generate_captions_accepts_legacy_lazyllm_key_prefix():
-    """LazyLLM caption check should accept legacy BANANA_SLIDES_* key prefix."""
+def test_can_generate_captions_does_not_accept_legacy_prefixes():
+    """LazyLLM caption check should ignore legacy BANANA_*/LAZYLLM_* key prefixes."""
     source = 'unit_test_source'
-    key_name = f'BANANA_SLIDES_{source.upper()}_API_KEY'
-
-    with patch.dict(os.environ, {key_name: 'test-key'}, clear=False):
+    with patch.dict(
+        os.environ,
+        {
+            f'BANANA_{source.upper()}_API_KEY': 'test-key',
+            f'LAZYLLM_{source.upper()}_API_KEY': 'test-key',
+            f'BANANA_SLIDES_{source.upper()}_API_KEY': 'test-key',
+        },
+        clear=False,
+    ):
         service = FileParserService(
             mineru_token='test-token',
             provider_format='lazyllm',
             lazyllm_image_caption_source=source,
         )
-        assert service._can_generate_captions() is True
+        assert service._can_generate_captions() is False
 
 
 def test_can_generate_captions_accepts_vendor_prefix_key():

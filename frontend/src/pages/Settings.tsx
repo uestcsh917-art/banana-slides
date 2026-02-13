@@ -733,7 +733,9 @@ export const Settings: React.FC = () => {
                   value === option.value
                     ? option.value === 'openai'
                       ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md'
-                      : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md'
+                      : option.value === 'lazyllm'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md'
+                        : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md'
                     : 'bg-white dark:bg-background-secondary border border-gray-200 dark:border-border-primary text-gray-700 dark:text-foreground-secondary hover:bg-gray-50 dark:hover:bg-background-hover hover:border-gray-300 dark:hover:border-gray-500'
                 }`}
               >

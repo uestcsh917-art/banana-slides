@@ -78,7 +78,7 @@ class LazyLLMImageProvider(ImageProvider):
         # Round to nearest multiple of 64 (common requirement)
         w = max(64, (w // 64) * 64)
         h = max(64, (h // 64) * 64)
-        resolution = f"{w}*{h}"
+        resolution = f"{w}x{h}"
         # Convert a PIL Image object to a file path: When passing a reference image to lazyllm, you need to input a path in string format.
         file_paths = None
         temp_paths = []

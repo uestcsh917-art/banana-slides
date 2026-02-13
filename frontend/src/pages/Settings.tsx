@@ -860,77 +860,78 @@ export const Settings: React.FC = () => {
         {/* 配置区块（配置驱动） */}
         <div className="space-y-8">
           {settingsSections.map((section) => (
-            <div key={section.title}>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-foreground-primary mb-4 flex items-center">
-                {section.icon}
-                <span className="ml-2">{section.title}</span>
-              </h2>
-              <div className="space-y-4">
-                {section.fields.map((field) => renderField(field))}
-                {section.title === t('settings.sections.apiConfig') && !isLazyllm && (
-                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                    <p className="text-sm text-gray-700 dark:text-foreground-secondary">
-                      {t('settings.apiKeyTip', { link: '' }).split('{{link}}')[0]}
-                      <a
-                        href="https://aihubmix.com/?aff=17EC"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline font-medium"
-                      >
-                        AIHubmix
-                      </a>
-                      {t('settings.apiKeyTip', { link: '' }).split('{{link}}')[1]}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {/* LazyLLM 厂商 API Key 配置（动态显示） */}
-          {isLazyllm && (() => {
-            const usedSources = new Set(
-              [formData.text_model_source, formData.image_model_source, formData.image_caption_model_source]
-                .filter(Boolean)
-            );
-            if (usedSources.size === 0) return null;
-            return (
+            <React.Fragment key={section.title}>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-foreground-primary mb-4 flex items-center">
-                  <Key size={20} />
-                  <span className="ml-2">{t('settings.sections.lazyllmConfig')}</span>
+                  {section.icon}
+                  <span className="ml-2">{section.title}</span>
                 </h2>
                 <div className="space-y-4">
-                  {Array.from(usedSources).map((source) => {
-                    const vendorLabel = LAZYLLM_SOURCES.find(s => s.value === source)?.label || source.toUpperCase();
-                    const keyLength = settings?.lazyllm_api_keys_info?.[source] || 0;
-                    const placeholder = keyLength > 0
-                      ? t('settings.fields.vendorApiKeySet', { length: keyLength })
-                      : t('settings.fields.vendorApiKeyPlaceholder', { vendor: vendorLabel });
-                    return (
-                      <div key={source}>
-                        <Input
-                          label={t('settings.fields.vendorApiKey', { vendor: vendorLabel })}
-                          type="password"
-                          placeholder={placeholder}
-                          value={formData.lazyllm_api_keys[source] || ''}
-                          onChange={(e) => {
-                            setFormData(prev => ({
-                              ...prev,
-                              lazyllm_api_keys: { ...prev.lazyllm_api_keys, [source]: e.target.value }
-                            }));
-                          }}
-                        />
-                        <p className="mt-1 text-sm text-gray-500 dark:text-foreground-tertiary">
-                          {t('settings.fields.vendorApiKeyDesc')}
-                        </p>
-                      </div>
-                    );
-                  })}
+                  {section.fields.map((field) => renderField(field))}
+                  {section.title === t('settings.sections.apiConfig') && !isLazyllm && (
+                    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                      <p className="text-sm text-gray-700 dark:text-foreground-secondary">
+                        {t('settings.apiKeyTip', { link: '' }).split('{{link}}')[0]}
+                        <a
+                          href="https://aihubmix.com/?aff=17EC"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline font-medium"
+                        >
+                          AIHubmix
+                        </a>
+                        {t('settings.apiKeyTip', { link: '' }).split('{{link}}')[1]}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            );
-          })()}
+              {/* LazyLLM 厂商 API Key 配置 - 紧跟在 API 配置区块后面 */}
+              {section.title === t('settings.sections.apiConfig') && isLazyllm && (() => {
+                const usedSources = new Set(
+                  [formData.text_model_source, formData.image_model_source, formData.image_caption_model_source]
+                    .filter(Boolean)
+                );
+                if (usedSources.size === 0) return null;
+                return (
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-foreground-primary mb-4 flex items-center">
+                      <Key size={20} />
+                      <span className="ml-2">{t('settings.sections.lazyllmConfig')}</span>
+                    </h2>
+                    <div className="space-y-4">
+                      {Array.from(usedSources).map((source) => {
+                        const vendorLabel = LAZYLLM_SOURCES.find(s => s.value === source)?.label || source.toUpperCase();
+                        const keyLength = settings?.lazyllm_api_keys_info?.[source] || 0;
+                        const placeholder = keyLength > 0
+                          ? t('settings.fields.vendorApiKeySet', { length: keyLength })
+                          : t('settings.fields.vendorApiKeyPlaceholder', { vendor: vendorLabel });
+                        return (
+                          <div key={source}>
+                            <Input
+                              label={t('settings.fields.vendorApiKey', { vendor: vendorLabel })}
+                              type="password"
+                              placeholder={placeholder}
+                              value={formData.lazyllm_api_keys[source] || ''}
+                              onChange={(e) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  lazyllm_api_keys: { ...prev.lazyllm_api_keys, [source]: e.target.value }
+                                }));
+                              }}
+                            />
+                            <p className="mt-1 text-sm text-gray-500 dark:text-foreground-tertiary">
+                              {t('settings.fields.vendorApiKeyDesc')}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </React.Fragment>
+          ))}
         </div>
 
         {/* 服务测试区 */}

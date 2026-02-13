@@ -233,6 +233,33 @@ def _load_settings_to_config(app):
             app.config['BAIDU_OCR_API_KEY'] = settings.baidu_ocr_api_key
             logging.info("Loaded BAIDU_OCR_API_KEY from settings")
 
+        # Load LazyLLM source settings
+        if settings.text_model_source:
+            app.config['TEXT_MODEL_SOURCE'] = settings.text_model_source
+            logging.info(f"Loaded TEXT_MODEL_SOURCE from settings: {settings.text_model_source}")
+        if settings.image_model_source:
+            app.config['IMAGE_MODEL_SOURCE'] = settings.image_model_source
+            logging.info(f"Loaded IMAGE_MODEL_SOURCE from settings: {settings.image_model_source}")
+        if settings.image_caption_model_source:
+            app.config['IMAGE_CAPTION_MODEL_SOURCE'] = settings.image_caption_model_source
+            logging.info(f"Loaded IMAGE_CAPTION_MODEL_SOURCE from settings: {settings.image_caption_model_source}")
+
+        # Sync LazyLLM vendor API keys to environment variables
+        # Only allow known vendor names to prevent environment variable injection
+        ALLOWED_LAZYLLM_VENDORS = {'qwen', 'doubao', 'deepseek', 'glm', 'siliconflow', 'sensenova', 'minimax', 'openai', 'kimi'}
+        if settings.lazyllm_api_keys:
+            import json
+            try:
+                keys = json.loads(settings.lazyllm_api_keys)
+                for vendor, key in keys.items():
+                    if key and vendor.lower() in ALLOWED_LAZYLLM_VENDORS:
+                        os.environ[f"{vendor.upper()}_API_KEY"] = key
+                    elif key:
+                        logging.warning(f"Ignoring unknown lazyllm vendor: {vendor}")
+                logging.info(f"Loaded LazyLLM API keys for vendors: {[v for v, k in keys.items() if k and v.lower() in ALLOWED_LAZYLLM_VENDORS]}")
+            except (json.JSONDecodeError, TypeError):
+                logging.warning("Failed to parse lazyllm_api_keys from settings")
+
     except Exception as e:
         logging.warning(f"Could not load settings from database: {e}")
 

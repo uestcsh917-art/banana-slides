@@ -680,11 +680,12 @@ def _test_image_model():
     ai_service = AIService()
     test_image_path = _get_test_image_path()
     prompt = "生成一张简洁、明亮、适合演示文稿的背景图。"
+    settings = Settings.get_settings()
     result = ai_service.generate_image(
         prompt=prompt,
         ref_image_path=str(test_image_path),
-        aspect_ratio="16:9",
-        resolution="1K"
+        aspect_ratio=settings.image_aspect_ratio or "16:9",
+        resolution=settings.image_resolution or "2K"
     )
 
     if result is None:

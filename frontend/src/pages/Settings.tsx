@@ -60,7 +60,7 @@ const settingsI18n = {
           textModel: { title: "文本生成模型", description: "发送短提示词，验证文本模型与 API 配置" },
           captionModel: { title: "图片识别模型", description: "生成测试图片并请求模型输出描述" },
           baiduInpaint: { title: "Baidu 图像修复", description: "使用测试图片执行修复，验证百度 inpaint 服务" },
-          imageModel: { title: "图像生成模型", description: "基于测试图片生成演示文稿背景图（1K, 可能需要 20-40 秒）" },
+          imageModel: { title: "图像生成模型", description: "基于测试图片生成演示文稿背景图（固定分辨率，可能需要 20-40 秒）" },
           mineruPdf: { title: "MinerU 解析 PDF", description: "上传测试 PDF 并等待解析结果返回（可能需要 30-60 秒）" }
         },
         results: {
@@ -133,7 +133,7 @@ const settingsI18n = {
           textModel: { title: "Text Generation Model", description: "Send short prompt to verify text model and API configuration" },
           captionModel: { title: "Image Caption Model", description: "Generate test image and request model to output description" },
           baiduInpaint: { title: "Baidu Image Inpainting", description: "Use test image for inpainting, verify Baidu inpaint service" },
-          imageModel: { title: "Image Generation Model", description: "Generate presentation background from test image (1K, may take 20-40 seconds)" },
+          imageModel: { title: "Image Generation Model", description: "Generate presentation background from test image (fixed resolution, may take 20-40 seconds)" },
           mineruPdf: { title: "MinerU PDF Parsing", description: "Upload test PDF and wait for parsing result (may take 30-60 seconds)" }
         },
         results: {

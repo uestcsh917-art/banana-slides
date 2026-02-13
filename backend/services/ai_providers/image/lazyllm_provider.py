@@ -42,6 +42,7 @@ class LazyLLMImageProvider(ImageProvider):
             ) from exc
 
         ensure_lazyllm_namespace_key(source, namespace='BANANA')
+        self._source = source
         self.client = lazyllm.namespace('BANANA').OnlineModule(
             source=source,
             model=model,
@@ -55,7 +56,7 @@ class LazyLLMImageProvider(ImageProvider):
                        enable_thinking: bool = False,
                        thinking_budget: int = 0
                        ) -> Optional[Image.Image]:
-        # Map resolution + aspect ratio to pixel dimensions (width*height)
+        # Map resolution + aspect ratio to pixel dimensions (WIDTHxHEIGHT)
         aspect_ratios = {
             "16:9": (16, 9),
             "4:3": (4, 3),
@@ -68,16 +69,22 @@ class LazyLLMImageProvider(ImageProvider):
         }
         base = resolution_base.get(resolution, 2048)
         ratio = aspect_ratios.get(aspect_ratio, (16, 9))
-        # Calculate dimensions maintaining aspect ratio with the longer side = base
         if ratio[0] >= ratio[1]:
             w = base
             h = int(base * ratio[1] / ratio[0])
         else:
             h = base
             w = int(base * ratio[0] / ratio[1])
-        # Round to nearest multiple of 64 (common requirement)
-        w = max(64, (w // 64) * 64)
-        h = max(64, (h // 64) * 64)
+        # Ensure minimum total pixels (some models require >= 3686400)
+        min_pixels = 3686400
+        total = w * h
+        if total < min_pixels:
+            scale = (min_pixels / total) ** 0.5
+            w = int(w * scale)
+            h = int(h * scale)
+        # Round up to nearest multiple of 64
+        w = max(64, ((w + 63) // 64) * 64)
+        h = max(64, ((h + 63) // 64) * 64)
         resolution = f"{w}x{h}"
         # Convert a PIL Image object to a file path: When passing a reference image to lazyllm, you need to input a path in string format.
         file_paths = None

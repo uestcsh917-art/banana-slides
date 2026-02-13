@@ -28,6 +28,8 @@ dependencies = [
 [project.optional-dependencies]
 lazyllm = [
     "lazyllm",
+    "dashscope",
+    "zhipuai",
 ]
 test = [
     "pytest>=7.4.0",

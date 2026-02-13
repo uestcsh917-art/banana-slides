@@ -6,8 +6,8 @@ from .baidu_inpainting_provider import BaiduInpaintingProvider, create_baidu_inp
 from .lazyllm_provider import LazyLLMImageProvider
 
 __all__ = [
-    'ImageProvider', 
-    'GenAIImageProvider', 
+    'ImageProvider',
+    'GenAIImageProvider',
     'OpenAIImageProvider',
     'BaiduInpaintingProvider',
     'create_baidu_inpainting_provider',

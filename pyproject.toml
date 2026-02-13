@@ -22,9 +22,13 @@ dependencies = [
     "flask-migrate>=4.0.0",
     "img2pdf>=0.5.1",
     "lazyllm>=0.7.3",
+    "volcengine-python-sdk[ark]>=5.0.9",
 ]
 
 [project.optional-dependencies]
+lazyllm = [
+    "lazyllm",
+]
 test = [
     "pytest>=7.4.0",
     "pytest-mock>=3.12.0",

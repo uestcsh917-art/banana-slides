@@ -9,7 +9,7 @@ Supports modes:
 - sensenova
 - ...
 """
-from .base import TextProvider
+from .base import TextProvider, strip_think_tags
 from ..lazyllm_env import ensure_lazyllm_namespace_key
 
 class LazyLLMTextProvider(TextProvider):
@@ -50,4 +50,4 @@ class LazyLLMTextProvider(TextProvider):
             Generated text
         """
         message = self.client(prompt)
-        return message
+        return strip_think_tags(message)

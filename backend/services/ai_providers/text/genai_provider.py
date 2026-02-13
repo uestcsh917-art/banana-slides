@@ -9,7 +9,7 @@ import logging
 from google import genai
 from google.genai import types
 from tenacity import retry, stop_after_attempt, wait_exponential
-from .base import TextProvider
+from .base import TextProvider, strip_think_tags
 from config import get_config
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def _validate_response(response):
             if hasattr(candidate, 'safety_ratings'):
                 logger.warning(f"Safety ratings: {candidate.safety_ratings}")
         raise ValueError("AI model returned empty response (response.text is None)")
-    return response.text
+    return strip_think_tags(response.text)
 
 
 class GenAITextProvider(TextProvider):

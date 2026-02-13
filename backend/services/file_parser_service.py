@@ -727,7 +727,7 @@ class FileParserService:
                 if not client:
                     logger.warning("Gemini client not initialized, skipping caption generation")
                     return ""
-                
+
                 result = client.models.generate_content(
                     model=self._image_caption_model,
                     contents=[image, prompt],
@@ -736,7 +736,11 @@ class FileParserService:
                     )
                 )
                 caption = result.text.strip()
-            
+
+            # Strip <think>...</think> tags from reasoning models
+            import re
+            caption = re.sub(r'<think>.*?</think>\s*', '', caption, flags=re.DOTALL).strip()
+
             return caption
             
         except Exception as e:

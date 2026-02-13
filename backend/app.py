@@ -245,14 +245,18 @@ def _load_settings_to_config(app):
             logging.info(f"Loaded IMAGE_CAPTION_MODEL_SOURCE from settings: {settings.image_caption_model_source}")
 
         # Sync LazyLLM vendor API keys to environment variables
+        # Only allow known vendor names to prevent environment variable injection
+        ALLOWED_LAZYLLM_VENDORS = {'qwen', 'doubao', 'deepseek', 'glm', 'siliconflow', 'sensenova', 'minimax', 'openai', 'kimi'}
         if settings.lazyllm_api_keys:
             import json
             try:
                 keys = json.loads(settings.lazyllm_api_keys)
                 for vendor, key in keys.items():
-                    if key:
+                    if key and vendor.lower() in ALLOWED_LAZYLLM_VENDORS:
                         os.environ[f"{vendor.upper()}_API_KEY"] = key
-                logging.info(f"Loaded LazyLLM API keys for vendors: {[v for v, k in keys.items() if k]}")
+                    elif key:
+                        logging.warning(f"Ignoring unknown lazyllm vendor: {vendor}")
+                logging.info(f"Loaded LazyLLM API keys for vendors: {[v for v, k in keys.items() if k and v.lower() in ALLOWED_LAZYLLM_VENDORS]}")
             except (json.JSONDecodeError, TypeError):
                 logging.warning("Failed to parse lazyllm_api_keys from settings")
 

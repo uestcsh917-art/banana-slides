@@ -15,12 +15,103 @@ Support models:
 import tempfile
 import os
 import logging
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from PIL import Image
 from .base import ImageProvider
 from ..lazyllm_env import ensure_lazyllm_namespace_key
 
 logger = logging.getLogger(__name__)
+
+# Vendor-specific image dimension constraints
+# Format: vendor -> (min_dimension, max_dimension, min_total_pixels, separator)
+VENDOR_IMAGE_CONSTRAINTS = {
+    'qwen': {
+        'min_dim': 512,
+        'max_dim': 2048,
+        'min_pixels': None,  # No minimum total pixels requirement
+        'separator': '*',
+    },
+    'doubao': {
+        'min_dim': None,
+        'max_dim': None,
+        'min_pixels': 3686400,  # ~1920x1920, required by seedream models
+        'separator': 'x',
+    },
+}
+DEFAULT_CONSTRAINTS = {
+    'min_dim': None,
+    'max_dim': None,
+    'min_pixels': None,
+    'separator': 'x',
+}
+
+
+def _calculate_image_dimensions(
+    resolution: str,
+    aspect_ratio: str,
+    source: str
+) -> Tuple[int, int, str]:
+    """
+    Calculate image dimensions based on resolution, aspect ratio, and vendor constraints.
+
+    Args:
+        resolution: Resolution preset (1K, 2K, 4K)
+        aspect_ratio: Aspect ratio (16:9, 4:3, 1:1)
+        source: Vendor name (qwen, doubao, etc.)
+
+    Returns:
+        Tuple of (width, height, size_string)
+    """
+    aspect_ratios = {
+        "16:9": (16, 9),
+        "4:3": (4, 3),
+        "1:1": (1, 1),
+    }
+    resolution_base = {
+        "1K": 1024,
+        "2K": 2048,
+        "4K": 4096,
+    }
+
+    constraints = VENDOR_IMAGE_CONSTRAINTS.get(source, DEFAULT_CONSTRAINTS)
+    min_dim = constraints['min_dim']
+    max_dim = constraints['max_dim']
+    min_pixels = constraints['min_pixels']
+    sep = constraints['separator']
+
+    # Start with base resolution
+    base = resolution_base.get(resolution, 2048)
+    if max_dim and base > max_dim:
+        base = max_dim
+
+    # Calculate dimensions from aspect ratio
+    ratio = aspect_ratios.get(aspect_ratio, (16, 9))
+    if ratio[0] >= ratio[1]:
+        w = base
+        h = int(base * ratio[1] / ratio[0])
+    else:
+        h = base
+        w = int(base * ratio[0] / ratio[1])
+
+    # Scale up if total pixels below minimum (e.g., doubao requires >= 3686400)
+    if min_pixels:
+        total = w * h
+        if total < min_pixels:
+            scale = (min_pixels / total) ** 0.5
+            w = int(w * scale)
+            h = int(h * scale)
+
+    # Round up to nearest multiple of 64 (common GPU alignment requirement)
+    w = max(64, ((w + 63) // 64) * 64)
+    h = max(64, ((h + 63) // 64) * 64)
+
+    # Enforce minimum dimension if specified
+    if min_dim:
+        w = max(min_dim, w)
+        h = max(min_dim, h)
+
+    return w, h, f"{w}{sep}{h}"
+
 
 class LazyLLMImageProvider(ImageProvider):
     """Image generation using Lazyllm framework"""
@@ -49,56 +140,15 @@ class LazyLLMImageProvider(ImageProvider):
             type='image_editing',
         )
 
-    def generate_image(self, prompt: str = None, 
-                       ref_images: Optional[List[Image.Image]] = None, 
-                       aspect_ratio = "16:9", 
+    def generate_image(self, prompt: str = None,
+                       ref_images: Optional[List[Image.Image]] = None,
+                       aspect_ratio = "16:9",
                        resolution = "1920*1080",
                        enable_thinking: bool = False,
                        thinking_budget: int = 0
                        ) -> Optional[Image.Image]:
-        # Map resolution + aspect ratio to pixel dimensions
-        aspect_ratios = {
-            "16:9": (16, 9),
-            "4:3": (4, 3),
-            "1:1": (1, 1),
-        }
-        resolution_base = {
-            "1K": 1024,
-            "2K": 2048,
-            "4K": 4096,
-        }
-        # Vendor-specific pixel limits
-        vendor_limits = {
-            'qwen': (512, 2048),
-        }
-        min_px, max_px = vendor_limits.get(self._source, (None, None))
-
-        base = resolution_base.get(resolution, 2048)
-        if max_px and base > max_px:
-            base = max_px
-        ratio = aspect_ratios.get(aspect_ratio, (16, 9))
-        if ratio[0] >= ratio[1]:
-            w = base
-            h = int(base * ratio[1] / ratio[0])
-        else:
-            h = base
-            w = int(base * ratio[0] / ratio[1])
-        # Ensure minimum total pixels (doubao requires >= 3686400)
-        min_pixels = 3686400
-        total = w * h
-        if not max_px and total < min_pixels:
-            scale = (min_pixels / total) ** 0.5
-            w = int(w * scale)
-            h = int(h * scale)
-        # Round up to nearest multiple of 64
-        w = max(64, ((w + 63) // 64) * 64)
-        h = max(64, ((h + 63) // 64) * 64)
-        if min_px:
-            w = max(min_px, w)
-            h = max(min_px, h)
-        # Vendors use different separators: qwen uses '*', others use 'x'
-        sep = '*' if self._source == 'qwen' else 'x'
-        resolution = f"{w}{sep}{h}"
+        # Calculate vendor-specific image dimensions
+        w, h, size_str = _calculate_image_dimensions(resolution, aspect_ratio, self._source)
         # Convert a PIL Image object to a file path: When passing a reference image to lazyllm, you need to input a path in string format.
         file_paths = None
         temp_paths = []
@@ -120,7 +170,7 @@ class LazyLLMImageProvider(ImageProvider):
                 file_paths.append(temp_path)
                 temp_paths.append(temp_path)
         try:
-            response_path = self.client(prompt, lazyllm_files=file_paths, size=resolution)
+            response_path = self.client(prompt, lazyllm_files=file_paths, size=size_str)
             image_path = decode_query_with_filepaths(response_path) # dict
             if not image_path:
                 logger.warning('No images found in response')

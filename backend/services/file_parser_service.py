@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from PIL import Image
 from markitdown import MarkItDown
 from services.ai_providers.lazyllm_env import ensure_lazyllm_namespace_key, get_lazyllm_api_key
+from services.ai_providers.text import strip_think_tags
 
 logger = logging.getLogger(__name__)
 
@@ -738,8 +739,7 @@ class FileParserService:
                 caption = result.text.strip()
 
             # Strip <think>...</think> tags from reasoning models
-            import re
-            caption = re.sub(r'<think>.*?</think>\s*', '', caption, flags=re.DOTALL).strip()
+            caption = strip_think_tags(caption)
 
             return caption
             

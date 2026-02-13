@@ -56,7 +56,7 @@ class LazyLLMImageProvider(ImageProvider):
                        enable_thinking: bool = False,
                        thinking_budget: int = 0
                        ) -> Optional[Image.Image]:
-        # Map resolution + aspect ratio to pixel dimensions (WIDTHxHEIGHT)
+        # Map resolution + aspect ratio to pixel dimensions
         aspect_ratios = {
             "16:9": (16, 9),
             "4:3": (4, 3),
@@ -67,7 +67,15 @@ class LazyLLMImageProvider(ImageProvider):
             "2K": 2048,
             "4K": 4096,
         }
+        # Vendor-specific pixel limits
+        vendor_limits = {
+            'qwen': (512, 2048),
+        }
+        min_px, max_px = vendor_limits.get(self._source, (None, None))
+
         base = resolution_base.get(resolution, 2048)
+        if max_px and base > max_px:
+            base = max_px
         ratio = aspect_ratios.get(aspect_ratio, (16, 9))
         if ratio[0] >= ratio[1]:
             w = base
@@ -75,17 +83,22 @@ class LazyLLMImageProvider(ImageProvider):
         else:
             h = base
             w = int(base * ratio[0] / ratio[1])
-        # Ensure minimum total pixels (some models require >= 3686400)
+        # Ensure minimum total pixels (doubao requires >= 3686400)
         min_pixels = 3686400
         total = w * h
-        if total < min_pixels:
+        if not max_px and total < min_pixels:
             scale = (min_pixels / total) ** 0.5
             w = int(w * scale)
             h = int(h * scale)
         # Round up to nearest multiple of 64
         w = max(64, ((w + 63) // 64) * 64)
         h = max(64, ((h + 63) // 64) * 64)
-        resolution = f"{w}x{h}"
+        if min_px:
+            w = max(min_px, w)
+            h = max(min_px, h)
+        # Vendors use different separators: qwen uses '*', others use 'x'
+        sep = '*' if self._source == 'qwen' else 'x'
+        resolution = f"{w}{sep}{h}"
         # Convert a PIL Image object to a file path: When passing a reference image to lazyllm, you need to input a path in string format.
         file_paths = None
         temp_paths = []

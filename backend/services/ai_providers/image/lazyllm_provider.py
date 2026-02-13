@@ -55,13 +55,30 @@ class LazyLLMImageProvider(ImageProvider):
                        enable_thinking: bool = False,
                        thinking_budget: int = 0
                        ) -> Optional[Image.Image]:
-        resolution_map = {
-            "1K": "1920*1080",
-            "2K": "2048*1080",
-            "4K": "3840*2160"
+        # Map resolution + aspect ratio to pixel dimensions (width*height)
+        aspect_ratios = {
+            "16:9": (16, 9),
+            "4:3": (4, 3),
+            "1:1": (1, 1),
         }
-        if resolution in resolution_map:
-            resolution = resolution_map[resolution]
+        resolution_base = {
+            "1K": 1024,
+            "2K": 2048,
+            "4K": 4096,
+        }
+        base = resolution_base.get(resolution, 2048)
+        ratio = aspect_ratios.get(aspect_ratio, (16, 9))
+        # Calculate dimensions maintaining aspect ratio with the longer side = base
+        if ratio[0] >= ratio[1]:
+            w = base
+            h = int(base * ratio[1] / ratio[0])
+        else:
+            h = base
+            w = int(base * ratio[0] / ratio[1])
+        # Round to nearest multiple of 64 (common requirement)
+        w = max(64, (w // 64) * 64)
+        h = max(64, (h // 64) * 64)
+        resolution = f"{w}*{h}"
         # Convert a PIL Image object to a file path: When passing a reference image to lazyllm, you need to input a path in string format.
         file_paths = None
         temp_paths = []
